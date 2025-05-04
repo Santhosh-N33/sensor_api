@@ -5,3 +5,4 @@ firebase-admin==6.8.0
 gunicorn==20.1.0
 datetime
 os
+json
