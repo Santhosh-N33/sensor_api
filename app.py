@@ -1,5 +1,3 @@
-import os
-import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask import Flask, request, jsonify
@@ -7,16 +5,7 @@ from datetime import datetime, timezone
 
 app = Flask(__name__)
 
-# Write the service account JSON string to a file
-service_account_info = os.getenv("FIREBASE_SERVICE_ACCOUNT")
-if not service_account_info:
-    raise ValueError("FIREBASE_SERVICE_ACCOUNT environment variable is missing")
-
-# Save it to a temporary file
-with open("firebase_key.json", "w") as f:
-    json.dump(json.loads(service_account_info), f)
-
-# Initialize Firebase
+# Initialize Firebase using the json file directly
 cred = credentials.Certificate("firebase_key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -40,4 +29,3 @@ def upload_sensor_data():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
