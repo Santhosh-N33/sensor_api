@@ -17,7 +17,7 @@ def upload_sensor_data():
     humidity = data.get('humidity')
     moisture = data.get('moisture')
 
-    if not all([uid, temperature, humidity, moisture]):
+    if uid is None or temperature is None or humidity is None or moisture is None:
         return jsonify({"error": "Missing fields"}), 400
 
     doc_ref = db.collection('users').document(uid).collection('sensors').document()
