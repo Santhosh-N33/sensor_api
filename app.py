@@ -1,34 +1,34 @@
 import os
+import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask import Flask, request, jsonify
 from datetime import datetime, timezone
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# Fetch Firebase credentials from environment variables
-firebase_service_account = os.getenv("FIREBASE_SERVICE_ACCOUNT")
-if not firebase_service_account:
+# Write the service account JSON string to a file
+service_account_info = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+if not service_account_info:
     raise ValueError("FIREBASE_SERVICE_ACCOUNT environment variable is missing")
 
-# Initialize Firebase Admin SDK with the service account
-cred = credentials.Certificate(firebase_service_account)
-firebase_admin.initialize_app(cred)
+# Save it to a temporary file
+with open("firebase_key.json", "w") as f:
+    json.dump(json.loads(service_account_info), f)
 
-# Get Firestore client
+# Initialize Firebase
+cred = credentials.Certificate("firebase_key.json")
+firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 @app.route("/upload", methods=["POST"])
 def upload_sensor_data():
     try:
-        data = request.get_json(force=True)  # force=True to handle bad headers
+        data = request.get_json(force=True)
         uid = data.get("uid")
-
         if not uid:
             return jsonify({"error": "UID missing"}), 400
 
-        # Store to Firestore
         db.collection("users").document(uid).collection("sensors").add({
             "temperature": data.get("temperature"),
             "humidity": data.get("humidity"),
@@ -40,5 +40,4 @@ def upload_sensor_data():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
