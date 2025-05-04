@@ -1,10 +1,24 @@
-# app.py
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore
 from flask import Flask, request, jsonify
-from firebase_admin_setup import db
 from datetime import datetime, timezone
 
-
+# Initialize Flask app
 app = Flask(__name__)
+
+# Fetch Firebase credentials from environment variables
+firebase_service_account = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+if not firebase_service_account:
+    raise ValueError("FIREBASE_SERVICE_ACCOUNT environment variable is missing")
+
+# Initialize Firebase Admin SDK with the service account
+cred = credentials.Certificate(firebase_service_account)
+firebase_admin.initialize_app(cred)
+
+# Get Firestore client
+db = firestore.client()
+
 @app.route("/upload", methods=["POST"])
 def upload_sensor_data():
     try:
@@ -26,3 +40,5 @@ def upload_sensor_data():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
