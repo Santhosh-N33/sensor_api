@@ -1,31 +1,31 @@
 from flask import Flask, request, jsonify
-import firebase_admin
-from firebase_admin import credentials, firestore
-from datetime import datetime
+from firebase_admin import credentials, firestore, initialize_app
+import datetime
 
 app = Flask(__name__)
 
+# Initialize Firebase only once
 cred = credentials.Certificate("serviceAccountKey.json")
-firebase_admin.initialize_app(cred)
+initialize_app(cred)
 db = firestore.client()
 
 @app.route('/upload-sensor', methods=['POST'])
-def upload_sensor():
+def upload_sensor_data():
     data = request.get_json()
-    uid = data.get("uid")
+    uid = data.get('uid')
+    temperature = data.get('temperature')
+    humidity = data.get('humidity')
+    moisture = data.get('moisture')
 
-    if not uid:
-        return jsonify({"error": "Missing UID"}), 400
+    if not all([uid, temperature, humidity, moisture]):
+        return jsonify({"error": "Missing fields"}), 400
 
-    doc_ref = db.collection("users").document(uid).collection("sensors").document("latest")
+    doc_ref = db.collection('users').document(uid).collection('sensors').document()
     doc_ref.set({
-        "temperature": data.get("temperature"),
-        "humidity": data.get("humidity"),
-        "soilMoisture": data.get("moisture"),
-        "timestamp": datetime.utcnow()
+        'temperature': temperature,
+        'humidity': humidity,
+        'moisture': moisture,
+        'timestamp': datetime.datetime.utcnow()
     })
 
     return jsonify({"status": "success"}), 200
-
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=5000)
